@@ -8,11 +8,17 @@ dns.setServers([
 '8.8.8.8'])
 const app = express()
 
+// Render terminates HTTPS at its proxy. Trust the forwarded protocol so secure
+// authentication cookies can be issued to the deployed frontend.
+app.set("trust proxy", 1)
+
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: ["http://localhost:5173",
-    "https://interview-ai-agent-ba09yf07e-visionaryiits-projects.vercel.app"],
+    origin: [
+        "http://localhost:5173",
+        "https://interview-ai-agent-kappa.vercel.app"
+    ],
     credentials: true
 }))
 
