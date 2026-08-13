@@ -11,7 +11,8 @@ const app = express()
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173",
+    "https://interview-ai-agent-ba09yf07e-visionaryiits-projects.vercel.app"],
     credentials: true
 }))
 
