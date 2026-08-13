@@ -3,10 +3,16 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const tokenBlacklistModel = require("../models/blacklist.model")
 
+// Render identifies deployed services with RENDER=true. NODE_ENV is retained
+// so this also works on other production hosts.
+const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true"
+
 const authCookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    // A cookie sent from localhost/Vercel to the Render API is cross-site.
+    // Browsers require SameSite=None cookies to also be Secure.
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 24 * 60 * 60 * 1000,
     path: "/"
 }
@@ -136,6 +142,9 @@ async function getMeController(req, res) {
 
     const user = await userModel.findById(req.user.id)
 
+    if (!user) {
+        return res.status(404).json({ message: "User not found." })
+    }
 
 
     res.status(200).json({

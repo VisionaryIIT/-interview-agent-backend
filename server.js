@@ -1,11 +1,24 @@
 require("dotenv").config()
 const app=require("./src/app")
 const connectToDB = require("./src/config/database")
-// const {invokeGeminiAi,generateInterviewReport}=require("./src/services/ai.service")
-// const {resume,selfDescription,jobDescription} =require("./src/services/temp")
-connectToDB()
-// invokeGeminiAi()
-// generateInterviewReport({resume,selfDescription,jobDescription})
-app.listen(3000,()=>{
-    console.log("Server is running on port 3000")
+
+const requiredEnvironmentVariables = ["MONGO_URI", "JWT_SECRET", "GOOGLE_GENAI_API_KEY"]
+const missingEnvironmentVariables = requiredEnvironmentVariables.filter((name) => !process.env[name])
+
+async function startServer() {
+    if (missingEnvironmentVariables.length) {
+        throw new Error(`Missing required environment variables: ${missingEnvironmentVariables.join(", ")}`)
+    }
+
+    await connectToDB()
+
+    const port = Number(process.env.PORT) || 3000
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`)
+    })
+}
+
+startServer().catch((error) => {
+    console.error("Unable to start server:", error.message)
+    process.exit(1)
 })

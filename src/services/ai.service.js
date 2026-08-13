@@ -1,6 +1,5 @@
 const { GoogleGenAI } = require("@google/genai")
 const { z } = require("zod")
-const { zodToJsonSchema } = require("zod-to-json-schema")
 const puppeteer = require("puppeteer")
 
 
@@ -47,11 +46,14 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(interviewReportSchema),
+            // zod-to-json-schema only supports Zod v3. With this project on
+            // Zod v4 it generated an empty schema, so Gemini returned a
+            // different object and Mongoose rejected it when saving.
+            responseSchema: z.toJSONSchema(interviewReportSchema),
         }
     })
 
-    return JSON.parse(response.text)
+    return interviewReportSchema.parse(JSON.parse(response.text))
 
 
 }
@@ -59,22 +61,28 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 
 
 async function generatePdfFromHtml(htmlContent) {
-    const browser = await puppeteer.launch()
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" })
+    let browser
 
-    const pdfBuffer = await page.pdf({
-        format: "A4", margin: {
-            top: "20mm",
-            bottom: "20mm",
-            left: "15mm",
-            right: "15mm"
+    try {
+        browser = await puppeteer.launch({
+            args: ["--no-sandbox", "--disable-setuid-sandbox"]
+        })
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { waitUntil: "networkidle0" })
+
+        return await page.pdf({
+            format: "A4", margin: {
+                top: "20mm",
+                bottom: "20mm",
+                left: "15mm",
+                right: "15mm"
+            }
+        })
+    } finally {
+        if (browser) {
+            await browser.close()
         }
-    })
-
-    await browser.close()
-
-    return pdfBuffer
+    }
 }
 
 async function generateResumePdf({ resume, selfDescription, jobDescription }) {
@@ -101,12 +109,12 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(resumePdfSchema),
+            responseSchema: z.toJSONSchema(resumePdfSchema),
         }
     })
 
 
-    const jsonContent = JSON.parse(response.text)
+    const jsonContent = resumePdfSchema.parse(JSON.parse(response.text))
 
     const pdfBuffer = await generatePdfFromHtml(jsonContent.html)
 
