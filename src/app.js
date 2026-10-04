@@ -10,7 +10,8 @@ const app = express()
 
 const defaultAllowedOrigins = [
     "http://localhost:5173",
-    "https://interview-ai-agent-kappa.vercel.app"
+    "https://interview-ai-agent-kappa.vercel.app",
+    "https://careerpilotai-alpha.vercel.app/register",
 ]
 
 // Set FRONTEND_URLS on Render to add or replace frontend origins, separated by
