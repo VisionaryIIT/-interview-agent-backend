@@ -9,9 +9,7 @@ dns.setServers([
 const app = express()
 
 const defaultAllowedOrigins = [
-    "http://localhost:5173",
     "https://interview-ai-agent-kappa.vercel.app",
-    "https://careerpilotai-alpha.vercel.app",
 ]
 
 // Set FRONTEND_URLS on Render to add or replace frontend origins, separated by
